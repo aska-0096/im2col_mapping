@@ -1,17 +1,17 @@
 # igemm mapping
 
 
-from ast import For
-from termios import CKILL
-from turtle import window_height
+# from ast import For
+# from termios import CKILL
+# from turtle import window_height
 
 
-N = 2
-Hi = 5
-Wi = 5
+N = 3
+Hi = 4
+Wi = 4
 C = 8
 
-K = 16
+K = 32
 Y = 2
 X = 2
 
@@ -134,7 +134,7 @@ for i_gemm_m in range(gemm_m):
         print(fmt.format(weight_index), end = ' ') if i_gemm_k != gemm_k-1 else print(fmt.format(weight_index), end='|\n')
 
 
-Vec = 4
+Vec = 8
 print(
 f'''
 #               NCHWC(Vec={Vec})
@@ -177,22 +177,24 @@ print(f'''
       Dimension:     {N}x{K_vec}x{Ho}x{Wo}x{Vec}
       Tensor Pixels: {N*K_vec*Ho*Wo*Vec}
       Expand to im2col Matrix C:
-      Axis:          NHoWo x Kk
-      Dimension:     {N*Ho*Wo}x{K_vec*Vec}
+      Axis:          Kk x NHoWo
+      Dimension:     {K_vec*Vec}x{N*Ho*Wo}
       Matrix Pixels: {N*K_vec*Ho*Wo*Vec}
       ''')
 for i_gemm_m in range(gemm_m):
-	print('|', end='')
-	for i_gemm_n in range(gemm_n):
-		i_n= i_gemm_n // (Ho*Wo)
-		i_ho = (i_gemm_n % (Ho*Wo))// Wo
-		i_wo = i_gemm_n%Wo
-		i_k = i_gemm_m // Vec
-		i_vec = i_gemm_m % Vec
+    if i_gemm_m % (Vec) == 0:
+        print('-'+'----'*gemm_n)
+    print('|', end='')
+    for i_gemm_n in range(gemm_n):
+        i_n= i_gemm_n // (Ho*Wo)
+        i_ho = (i_gemm_n % (Ho*Wo))// Wo
+        i_wo = i_gemm_n%Wo
+        i_k = i_gemm_m // Vec
+        i_vec = i_gemm_m % Vec
 
 		# print(f'({i_ho},{i_wo})', end ='')
-		C_index = i_n * K_vec * Ho * Wo * Vec + i_k * Ho * Wo * Vec + i_ho * Wo * Vec + i_wo * Vec + i_vec
-		print(fmt.format(C_index), end='|') if i_gemm_n != gemm_n-1 else print(fmt.format(C_index), '|')
+        C_index = i_n * K_vec * Ho * Wo * Vec + i_k * Ho * Wo * Vec + i_ho * Wo * Vec + i_wo * Vec + i_vec
+        print(fmt.format(C_index), end='|') if i_gemm_n != gemm_n-1 else print(fmt.format(C_index), '|')
 
 print(f'''
       Input_TENSOR 
